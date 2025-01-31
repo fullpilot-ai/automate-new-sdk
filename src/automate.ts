@@ -48,7 +48,7 @@ export async function trigger(
  * Sets up Hono routes for functions and triggers in the task.
  */
 export const automate = {
-  serve: (task: AutomationTask) => {
+  serve: (task: AutomationTask): Hono => {
     logger.info(`Serving automation: ${task.name}`);
     
     // Store the current task
@@ -171,12 +171,7 @@ export const automate = {
       }
     });
 
-    // For backward compatibility, return the task
-    return task;
+    // Return the Hono app
+    return app;
   },
 };
-
-// Export the fetch handler for Cloudflare Workers
-export default {
-  fetch: app.fetch.bind(app)
-}; 

@@ -20,3 +20,5 @@ Thumbs.db
 # Misc
 *.log
 *.tgz
+
+wrangler.toml

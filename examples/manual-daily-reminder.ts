@@ -71,8 +71,11 @@ const dailyReminder = task({
   ]
 });
 
-// Start the automation
-automate.serve(dailyReminder);
+// Initialize the automation and get the Hono app
+const app = automate.serve(dailyReminder);
 
-// Export the task for potential reuse
-export default dailyReminder; 
+// Export the fetch handler for Cloudflare Workers
+// This pattern allows the worker to handle incoming HTTP requests
+export default {
+  fetch: app.fetch.bind(app)
+}; 
