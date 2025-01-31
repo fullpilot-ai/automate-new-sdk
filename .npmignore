@@ -1,0 +1,27 @@
+# Source
+src/
+
+# Tests
+test/
+coverage/
+*.test.ts
+*.spec.ts
+
+# Config files
+.github/
+.gitignore
+.prettierrc
+.eslintrc
+tsconfig.json
+wrangler.toml
+
+# Examples
+examples/
+
+# Misc
+.DS_Store
+*.log
+*.tgz
+
+# Build artifacts
+dist/ 

@@ -12,15 +12,16 @@ Your automations are deployed as Cloudflare Workers, making them globally distri
 
 ## Features
 
-- 🔥 Simple, declarative API for defining automations
-- 🌐 Built on Cloudflare Workers for global deployment
-- 🔄 Multiple trigger types:
+- Simple, declarative API for defining automations
+- Built on Cloudflare Workers for global deployment
+- Multiple trigger types:
   - Webhook triggers for HTTP-based automation
-  - Cron triggers for scheduled tasks
+  - Cron triggers for scheduled tasks (UTC-based)
   - Manual triggers with parameter validation
-- 🛠️ Type-safe function definitions and parameters
-- 📝 Built-in logging and error handling
-- ⚡ Powered by Hono.js for fast HTTP handling
+- Type-safe function definitions and parameters
+- JSON Schema validation for parameters
+- Built-in logging and error handling
+- Powered by Hono.js for fast HTTP handling
 
 ## Quick Start
 
@@ -40,8 +41,13 @@ const myAutomation = task({
       name: "sayHello",
       parameters: {
         type: "object",
+        required: ["name"],
         properties: {
-          name: { type: "string" }
+          name: { 
+            type: "string",
+            description: "Name to greet",
+            minLength: 1
+          }
         }
       },
       execute: async (params) => {
@@ -55,8 +61,13 @@ const myAutomation = task({
       type: "manual",
       parameters: {
         type: "object",
+        required: ["name"],
         properties: {
-          name: { type: "string" }
+          name: { 
+            type: "string",
+            description: "Name to greet",
+            minLength: 1
+          }
         }
       },
       execute: async ({ params, trigger }) => {
@@ -90,6 +101,48 @@ interface AutomationTask {
 }
 ```
 
+### Parameter Validation
+
+The SDK uses JSON Schema for parameter validation. This provides rich validation capabilities:
+
+```typescript
+{
+  parameters: {
+    type: "object",
+    required: ["email", "subject"],
+    properties: {
+      email: {
+        type: "string",
+        format: "email",
+        description: "Recipient email address"
+      },
+      subject: {
+        type: "string",
+        minLength: 1,
+        maxLength: 100,
+        description: "Email subject line"
+      },
+      body: {
+        type: "string",
+        default: "Default message",
+        examples: ["Example message 1", "Example message 2"]
+      }
+    }
+  }
+}
+```
+
+Supported validations include:
+- Type checking (`type`)
+- Required fields (`required`)
+- String formats (`format`)
+- Length constraints (`minLength`, `maxLength`)
+- Numeric ranges (`minimum`, `maximum`)
+- Pattern matching (`pattern`)
+- Enums (`enum`)
+- Default values (`default`)
+- And more...
+
 ### Trigger Types
 
 #### Manual Trigger
@@ -101,7 +154,7 @@ Allows manual invocation with parameter validation:
   parameters: {
     type: "object",
     properties: {
-      // Define your parameters here
+      // JSON Schema validation
     }
   },
   execute: async ({ params, trigger }) => {
@@ -123,12 +176,12 @@ Handles HTTP requests:
 ```
 
 #### Cron Trigger
-Runs on a schedule:
+Runs on a schedule (UTC time):
 ```typescript
 {
   name: "scheduled-trigger",
   type: "cron",
-  cron: "0 * * * *", // Every hour
+  cron: "0 19 * * *", // Runs at 19:00 UTC (2:00 PM EST)
   execute: async ({ trigger }) => {
     // Your scheduled logic
   }

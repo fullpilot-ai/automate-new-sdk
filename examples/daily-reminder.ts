@@ -15,11 +15,10 @@ const dailyReminder = task({
   // Define the triggers
   triggers: [
     {
-      name: "daily-1pm-trigger",
+      name: "daily-2pm-trigger",
       type: "cron",
-      // "0 13 * * *" represents 1:00 PM in IST
-      // Note: Make sure your server is configured to IST timezone
-      cron: "0 13 * * *",
+      // "0 19 * * *" represents 2:00 PM EST (19:00 UTC)
+      cron: "0 19 * * *",
       execute: async () => {
         await trigger("sendReminderEmail", {
           to: "recipient@example.com",
@@ -36,10 +35,28 @@ const dailyReminder = task({
       name: "sendReminderEmail",
       parameters: {
         type: "object",
+        required: ["to", "subject"],
         properties: {
-          to: { type: "string" },
-          subject: { type: "string" },
-          body: { type: "string" }
+          to: { 
+            type: "string",
+            format: "email",
+            description: "Recipient email address"
+          },
+          subject: { 
+            type: "string",
+            minLength: 1,
+            maxLength: 100,
+            description: "Email subject line"
+          },
+          body: { 
+            type: "string",
+            default: "This is your daily reminder!",
+            description: "Email body content",
+            examples: [
+              "Don't forget to check your tasks for today!",
+              "Time for your daily review."
+            ]
+          }
         }
       },
       execute: async ({ params }) => {

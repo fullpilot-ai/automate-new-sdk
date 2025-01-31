@@ -17,7 +17,12 @@ export interface WebhookTrigger {
 export interface CronTrigger {
   name: string;
   type: "cron";
-  cron: string; // cron expression like "0 13 * * *"
+  /** 
+   * Cron expression (e.g. "0 13 * * *") in UTC time
+   * Note: Cloudflare Workers evaluate cron expressions in UTC.
+   * For example, "0 19 * * *" will run at 2:00 PM EST (19:00 UTC)
+   */
+  cron: string;
   execute: (context: {
     trigger: TriggerFunction;
   }) => Promise<void> | void;
@@ -27,10 +32,7 @@ export interface CronTrigger {
 export interface ManualTrigger {
   name: string;
   type: "manual";
-  parameters: {
-    type: string;
-    properties: Record<string, { type: string }>;
-  };
+  parameters: JSONSchema;
   execute: (context: { 
     params: Record<string, any>;
     trigger: TriggerFunction;
@@ -42,10 +44,7 @@ export type Trigger = WebhookTrigger | CronTrigger | ManualTrigger;
 // For function definitions
 export interface AutomationFunction {
   name: string;
-  parameters: {
-    type: string;
-    properties: Record<string, { type: string }>;
-  };
+  parameters: JSONSchema;
   execute: (params: Record<string, any>) => Promise<void> | void;
 }
 
@@ -76,4 +75,30 @@ export type TriggerFunction = (
   functionName: string,
   params: TriggerParams,
   options?: TriggerOptions
-) => Promise<void> | void; 
+) => Promise<void> | void;
+
+/**
+ * JSON Schema type definition based on JSON Schema Draft-07
+ */
+export interface JSONSchema {
+  type?: string | string[];
+  properties?: Record<string, JSONSchema>;
+  required?: string[];
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  format?: string;
+  enum?: any[];
+  default?: any;
+  description?: string;
+  title?: string;
+  examples?: any[];
+  items?: JSONSchema | JSONSchema[];
+  additionalProperties?: boolean | JSONSchema;
+  allOf?: JSONSchema[];
+  anyOf?: JSONSchema[];
+  oneOf?: JSONSchema[];
+  not?: JSONSchema;
+} 
