@@ -1,0 +1,11 @@
+name = "automate-new-cli"
+main = "examples/daily-reminder.ts"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "npm run build"
+
+[[rules]]
+type = "Data"
+globs = ["images/**/*"]
+fallthrough = true 

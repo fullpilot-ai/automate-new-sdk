@@ -1,0 +1,21 @@
+{
+  "name": "automate-new-sdk",
+  "version": "1.0.0",
+  "description": "Automation framework for Cloudflare Workers",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "test": "wrangler dev examples/daily-reminder.ts",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "hono": "^3.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
+  }
+}
