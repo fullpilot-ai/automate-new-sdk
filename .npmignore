@@ -18,16 +18,20 @@ wrangler.toml
 # Examples
 examples/
 
+# IDE
+.vscode/
+.idea/
+
 # Misc
 .DS_Store
 *.log
 *.tgz
 
 # Build artifacts
-dist/
+# dist/
 
 # Source maps
-*.map 
+*.map
 
 # Node modules
 node_modules/

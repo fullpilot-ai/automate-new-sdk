@@ -17,10 +17,13 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
     "build": "tsc",
+    "test": "tsc --noEmit",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test",
+    "prepublishOnly": "npm run test",
+    "preversion": "npm run test",
     "version": "git add -A src",
     "postversion": "git push && git push --tags",
     "dev": "wrangler dev examples/daily-reminder.ts"
@@ -33,16 +36,16 @@
     "hono",
     "serverless"
   ],
-  "author": "",
+  "author": "Fullpilot, Inc.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/automate-new-sdk.git"
+    "url": "git+https://github.com/fullpilot-ai/automate-new-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/automate-new-sdk/issues"
+    "url": "https://github.com/fullpilot-ai/automate-new-sdk/issues"
   },
-  "homepage": "https://github.com/yourusername/automate-new-sdk#readme",
+  "homepage": "https://github.com/fullpilot-ai/automate-new-sdk#readme",
   "dependencies": {
     "hono": "^3.0.0"
   },

@@ -3,24 +3,13 @@ node_modules/
 .npm
 package-lock.json
 
-# Build outputs
+# Build
 dist/
-build/
-
-# Cloudflare Workers
-.wrangler/
-.dev.vars
-
-# TypeScript
 *.tsbuildinfo
 
-# Environment variables
-.env
-.env.*
-
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
 
@@ -29,5 +18,5 @@ build/
 Thumbs.db
 
 # Misc
-*.tgz
 *.log
+*.tgz
