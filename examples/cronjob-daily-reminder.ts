@@ -1,4 +1,15 @@
 import { task, automate, trigger } from '../src';
+import { z } from 'zod';
+
+// Define schema for email parameters
+const EmailParams = z.object({
+  to: z.string().email().describe("Recipient email address"),
+  subject: z.string().min(1).max(100).describe("Email subject line"),
+  body: z.string().default("This is your daily reminder!").describe("Email body content")
+});
+
+type EmailParams = z.infer<typeof EmailParams>;
+
 // Helper function to send email (implementation would depend on your email service)
 async function sendEmail(to: string, subject: string, body: string) {
   // This is a mock implementation
@@ -11,14 +22,14 @@ async function sendEmail(to: string, subject: string, body: string) {
 // Create the automation task
 const dailyReminder = task({
   name: "daily-reminder",
+  description: "Sends daily reminder emails at 2 PM EST",
+  version: "1.0.0",
   
-  // Define the triggers
   triggers: [
     {
       name: "daily-2pm-trigger",
       type: "cron",
-      // "0 19 * * *" represents 2:00 PM EST (19:00 UTC)
-      cron: "0 19 * * *",
+      cron: "0 19 * * *", // 2:00 PM EST (19:00 UTC)
       execute: async () => {
         await trigger("sendReminderEmail", {
           to: "recipient@example.com",
@@ -29,37 +40,11 @@ const dailyReminder = task({
     }
   ],
   
-  // Define the functions
   functions: [
     {
       name: "sendReminderEmail",
-      parameters: {
-        type: "object",
-        required: ["to", "subject"],
-        properties: {
-          to: { 
-            type: "string",
-            format: "email",
-            description: "Recipient email address"
-          },
-          subject: { 
-            type: "string",
-            minLength: 1,
-            maxLength: 100,
-            description: "Email subject line"
-          },
-          body: { 
-            type: "string",
-            default: "This is your daily reminder!",
-            description: "Email body content",
-            examples: [
-              "Don't forget to check your tasks for today!",
-              "Time for your daily review."
-            ]
-          }
-        }
-      },
-      execute: async ({ params }) => {
+      parameters: EmailParams,
+      execute: async (params: EmailParams) => {
         await sendEmail(
           params.to,
           params.subject,

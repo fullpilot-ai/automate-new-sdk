@@ -42,6 +42,7 @@ export async function trigger(
     await new Promise(resolve => setTimeout(resolve, Number(options.delay)));
   }
 
+  // Execute the function
   await fn.execute(params);
 }
 
@@ -73,7 +74,7 @@ export const automate = {
           
           return c.json({ 
             success: true, 
-            message: `Function ${fn.name} executed successfully` 
+            message: `Function ${fn.name} executed successfully`
           });
         } catch (error) {
           logger.error(`Error executing function ${fn.name}: ${error}`);
@@ -88,7 +89,6 @@ export const automate = {
     // Register trigger endpoints based on their type
     task.triggers.forEach((triggerConfig) => {
       let route: string;
-      const triggerFn = trigger;
       
       switch (triggerConfig.type) {
         case "manual": {
@@ -101,10 +101,7 @@ export const automate = {
               const body = await c.req.json();
               const params = body.parameters || {};
               
-              await trigger.execute({
-                params,
-                trigger: triggerFn
-              });
+              await trigger.execute(params);
               
               return c.json({
                 success: true,
@@ -128,9 +125,7 @@ export const automate = {
           
           app.post(route, async (c) => {
             try {
-              await trigger.execute({
-                trigger: triggerFn
-              });
+              await trigger.execute();
               
               return c.json({
                 success: true,
@@ -154,16 +149,18 @@ export const automate = {
           
           app.post(route, async (c) => {
             try {
-              await trigger.execute({
-                req: c.req,
-                res: c.res,
-                trigger: triggerFn
-              });
+              await trigger.execute(c);
               
-              return c.json({
-                success: true,
-                message: `Webhook trigger ${trigger.name} executed successfully`
-              });
+              // If no response has been sent by the webhook handler, send a default success
+              if (!c.res.headers.get('content-type')) {
+                return c.json({
+                  success: true,
+                  message: `Webhook trigger ${trigger.name} executed successfully`
+                });
+              }
+              
+              // If the handler set a response, it will be used automatically
+              return c.res;
             } catch (error) {
               logger.error(`Error executing webhook trigger ${trigger.name}: ${error}`);
               return c.json({

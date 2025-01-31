@@ -2,16 +2,16 @@
  * This file defines a TypeScript interface to mirror the structure 
  * used by the "task" object from automate.new.
  */
+import { z } from 'zod';
+import type { Context } from 'hono';
+
 export type TriggerType = "webhook" | "cron" | "manual";
 
 export interface WebhookTrigger {
   name: string;
   type: "webhook";
-  execute: (context: { 
-    req: any;  // Using any for now since we're using Hono's request type
-    res: any;  // Using any for now since we're using Hono's response type
-    trigger: TriggerFunction;
-  }) => Promise<void> | void;
+  parameters?: z.ZodType;
+  execute: (c: Context) => Promise<void> | void;
 }
 
 export interface CronTrigger {
@@ -23,34 +23,31 @@ export interface CronTrigger {
    * For example, "0 19 * * *" will run at 2:00 PM EST (19:00 UTC)
    */
   cron: string;
-  execute: (context: {
-    trigger: TriggerFunction;
-  }) => Promise<void> | void;
+  execute: () => Promise<void> | void;
 }
 
 // Manual triggers create a form that can be used to trigger the automation
-export interface ManualTrigger {
+export interface ManualTrigger<TParams = any> {
   name: string;
   type: "manual";
-  parameters: JSONSchema;
-  execute: (context: { 
-    params: Record<string, any>;
-    trigger: TriggerFunction;
-  }) => Promise<void> | void;
+  parameters: z.ZodType<TParams>;
+  execute: (params: TParams) => Promise<void> | void;
 }
 
 export type Trigger = WebhookTrigger | CronTrigger | ManualTrigger;
 
 // For function definitions
-export interface AutomationFunction {
+export interface AutomationFunction<TParams = any> {
   name: string;
-  parameters: JSONSchema;
-  execute: (params: Record<string, any>) => Promise<void> | void;
+  parameters: z.ZodType<TParams>;
+  execute: (params: TParams) => Promise<void> | void;
 }
 
 // Finally, the overall Task structure
 export interface AutomationTask {
   name: string;
+  description?: string;
+  version?: string;
   triggers: Trigger[];
   functions: AutomationFunction[];
 }
@@ -69,13 +66,13 @@ export interface TriggerOptions {
 export type TriggerParams = Record<string, any>;
 
 /**
- * The trigger function signature
+ * The trigger function signature with response type
  */
 export type TriggerFunction = (
   functionName: string,
   params: TriggerParams,
   options?: TriggerOptions
-) => Promise<void> | void;
+) => Promise<void>; 
 
 /**
  * JSON Schema type definition based on JSON Schema Draft-07
