@@ -1,6 +1,6 @@
 {
   "name": "automate-new-sdk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Automation framework for Cloudflare Workers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
