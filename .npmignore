@@ -28,3 +28,9 @@ dist/
 
 # Source maps
 *.map 
+
+# Node modules
+node_modules/
+
+# Package-lock.json
+package-lock.json
