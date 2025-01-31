@@ -24,4 +24,7 @@ examples/
 *.tgz
 
 # Build artifacts
-dist/ 
+dist/
+
+# Source maps
+*.map 

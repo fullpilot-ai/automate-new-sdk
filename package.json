@@ -6,11 +6,12 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
+    "src",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "test": "wrangler dev examples/daily-reminder.ts",
+    "test": "tsc test.ts && node test.js",
     "build": "tsc",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
