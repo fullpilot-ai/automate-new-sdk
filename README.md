@@ -1,4 +1,4 @@
-# Automate New CLI
+# Automate New SDK
 
 A TypeScript-based automation framework for building and deploying automations to automate.new, powered by Cloudflare Workers and Hono.js.
 
