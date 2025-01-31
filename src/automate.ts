@@ -10,9 +10,6 @@ const app = new Hono();
 // Enable CORS
 app.use("/*", cors());
 
-// Serve favicon using __STATIC_CONTENT manifest
-app.get('/favicon.ico', serveStatic({ manifest: { "favicon.ico": "images/favicon.ico" } }));
-
 // Store the current task being served
 let currentTask: AutomationTask | null = null;
 
