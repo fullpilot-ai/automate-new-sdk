@@ -17,12 +17,13 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "wrangler dev examples/daily-reminder.ts",
+    "test": "tsc --noEmit",
     "build": "tsc",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "version": "git add -A src",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags",
+    "dev": "wrangler dev examples/daily-reminder.ts"
   },
   "keywords": [
     "automation",
