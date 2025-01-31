@@ -11,7 +11,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "tsc test.ts && node test.js",
+    "test": "wrangler dev examples/daily-reminder.ts",
     "build": "tsc",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
