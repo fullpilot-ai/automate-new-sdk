@@ -26,7 +26,8 @@
     "preversion": "npm run test",
     "version": "git add -A src",
     "postversion": "git push && git push --tags",
-    "dev": "wrangler dev examples/daily-reminder.ts"
+    "dev": "wrangler dev examples/daily-reminder.ts",
+    "validate": "ts-node src/bin.ts validate"
   },
   "keywords": [
     "automation",
@@ -47,14 +48,21 @@
   },
   "homepage": "https://github.com/fullpilot-ai/automate-new-sdk#readme",
   "dependencies": {
-    "hono": "^3.0.0"
+    "hono": "^3.0.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
+    "@types/node": "^22.13.10",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0",
     "wrangler": "^3.0.0"
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "bin": {
+    "automate-new-sdk": "./dist/bin.js"
   }
 }

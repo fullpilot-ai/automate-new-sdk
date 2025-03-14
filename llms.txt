@@ -1,0 +1,173 @@
+AUTOMATION FRAMEWORK GUIDE FOR LLMs
+
+When generating code for this automation framework, follow these guidelines to create valid and type-safe automations:
+
+1. BASIC STRUCTURE
+Every automation must export a fetch handler and use this structure:
+
+```typescript
+import { task, automate, trigger } from 'automate-new-sdk';
+import { z } from 'zod';
+import type { Context } from 'hono';
+
+// Define your schemas
+const YourParams = z.object({...});
+type YourParams = z.infer<typeof YourParams>;
+
+// Create your task
+const yourTask = task({
+  name: "your-task-name",
+  description: "What your task does",
+  version: "1.0.0",
+  triggers: [...],
+  functions: [...]
+});
+
+// Initialize and export
+const app = automate.serve(yourTask);
+export default {
+  fetch: app.fetch.bind(app)
+};
+```
+
+2. TRIGGER TYPES
+You must implement one or more of these trigger types:
+
+a) Webhook Triggers:
+```typescript
+{
+  name: "your-webhook",
+  type: "webhook",
+  parameters?: z.ZodType,  // Optional
+  execute: (c: Context) => Promise<void> | void
+}
+```
+- Use the Hono Context (c) to handle request/response
+- Set responses using c.json() and c.status()
+- Parameters are optional for webhooks
+
+b) Cron Triggers:
+```typescript
+{
+  name: "your-cron",
+  type: "cron",
+  cron: "* * * * *",  // Standard cron syntax
+  execute: () => Promise<void> | void
+}
+```
+- No parameters allowed
+- Must use trigger() to call functions
+- Cron times are in UTC
+
+c) Manual Triggers:
+```typescript
+{
+  name: "your-manual",
+  type: "manual",
+  parameters: z.ZodType<TParams>,
+  execute: (params: TParams) => Promise<void> | void
+}
+```
+- Must define parameters schema
+- Parameters are passed directly to execute
+
+3. FUNCTIONS
+Functions are reusable operations that triggers can call:
+```typescript
+{
+  name: "your-function",
+  parameters: z.ZodType<TParams>,
+  execute: (params: TParams) => Promise<void> | void
+}
+```
+
+4. PARAMETER VALIDATION
+Always use Zod for parameter validation:
+- Define schemas at the top level
+- Use z.object() for structured data
+- Add .describe() for documentation
+- Use type inference with z.infer<>
+
+5. TRIGGER FUNCTION
+Use trigger() to call functions from triggers:
+```typescript
+await trigger(
+  "functionName",
+  parameters,
+  { delay?: number | string }  // Optional
+);
+```
+
+6. RESPONSE HANDLING
+- Webhook triggers: Use c.json() and c.status()
+- Other triggers: Don't return values, use trigger()
+- Functions: Don't return values, perform actions
+
+7. BEST PRACTICES
+- Use descriptive names for triggers and functions
+- Add proper descriptions
+- Validate all inputs with Zod
+- Handle errors in execute functions
+- Use proper TypeScript types
+- Keep functions focused and reusable
+- Use trigger() for function calls
+- Don't mix response handling styles
+
+8. ENDPOINTS CREATED
+Your automation will create these endpoints:
+- GET /                           -> Health check
+- POST /webhook/{name}           -> Webhook triggers
+- POST /manual-trigger/{name}    -> Manual triggers
+- POST /cronjob-trigger/{name}   -> Cron triggers
+- POST /{functionName}           -> Direct function calls
+
+9. EXAMPLE PATTERNS
+
+a) Webhook calling function:
+```typescript
+{
+  type: "webhook",
+  execute: async (c: Context) => {
+    const body = await c.req.json();
+    const params = YourSchema.parse(body);
+    await trigger("yourFunction", params);
+    await c.json({ success: true });
+  }
+}
+```
+
+b) Cron trigger with scheduling:
+```typescript
+{
+  type: "cron",
+  cron: "0 9 * * *",  // 9 AM UTC
+  execute: async () => {
+    await trigger("yourFunction", { param: "value" });
+  }
+}
+```
+
+c) Manual trigger with validation:
+```typescript
+{
+  type: "manual",
+  parameters: z.object({
+    field: z.string().email()
+  }),
+  execute: async (params) => {
+    await trigger("yourFunction", params);
+  }
+}
+```
+
+10. COMMON MISTAKES TO AVOID
+- Don't return values from execute functions
+- Don't skip parameter validation
+- Don't use response in trigger/function types
+- Don't mix async/sync code without proper handling
+- Don't forget to export the fetch handler
+- Don't call functions directly, use trigger()
+- Don't use parameters in cron triggers
+- Don't forget to bind the fetch handler
+
+Remember: The framework is designed for Cloudflare Workers, so all code should be compatible with that environment. 

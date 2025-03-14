@@ -5,51 +5,36 @@
 import { z } from 'zod';
 import type { Context } from 'hono';
 
-export type TriggerType = "webhook" | "cron" | "manual";
+export type TriggerType = "scheduled" | "manual";
 
-export interface WebhookTrigger {
-  name: string;
-  type: "webhook";
-  parameters?: z.ZodType;
-  execute: (c: Context) => Promise<void> | void;
+// Available tools that can be used in the workflow
+export type Tool = "SENDGRID" | "OPENAI" | "GRAMMARLY";
+
+export interface ScheduledTrigger {
+  type: "scheduled";
+  cron: string; // Cron expression in UTC time
 }
 
-export interface CronTrigger {
-  name: string;
-  type: "cron";
-  /** 
-   * Cron expression (e.g. "0 13 * * *") in UTC time
-   * Note: Cloudflare Workers evaluate cron expressions in UTC.
-   * For example, "0 19 * * *" will run at 2:00 PM EST (19:00 UTC)
-   */
-  cron: string;
-  execute: () => Promise<void> | void;
-}
-
-// Manual triggers create a form that can be used to trigger the automation
-export interface ManualTrigger<TParams = any> {
-  name: string;
+export interface ManualTrigger {
   type: "manual";
-  parameters: z.ZodType<TParams>;
-  execute: (params: TParams) => Promise<void> | void;
+  schema: z.ZodType; // Schema for input validation
 }
 
-export type Trigger = WebhookTrigger | CronTrigger | ManualTrigger;
+export type Trigger = ScheduledTrigger | ManualTrigger;
 
-// For function definitions
-export interface AutomationFunction<TParams = any> {
-  name: string;
-  parameters: z.ZodType<TParams>;
-  execute: (params: TParams) => Promise<void> | void;
+export interface Step {
+  prompt: string; // The prompt/instruction for the AI agent
+  maxSteps: number; // Maximum number of steps the agent can take for this prompt
+  tools?: string[]; // Tools that this step can use
 }
 
-// Finally, the overall Task structure
+// The overall Task structure for AI agent workflow
 export interface AutomationTask {
   name: string;
   description?: string;
   version?: string;
   triggers: Trigger[];
-  functions: AutomationFunction[];
+  steps: Step[];
 }
 
 /**
