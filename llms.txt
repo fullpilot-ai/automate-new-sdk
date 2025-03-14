@@ -6,9 +6,8 @@ When generating code for this automation framework, follow these guidelines to c
 Every automation must export a fetch handler and use this structure:
 
 ```typescript
-import { task, automate, trigger } from 'automate-new-sdk';
+import { task, automate } from 'automate-new-sdk';
 import { z } from 'zod';
-import type { Context } from 'hono';
 
 // Define your schemas
 const YourParams = z.object({...});
@@ -20,7 +19,7 @@ const yourTask = task({
   description: "What your task does",
   version: "1.0.0",
   triggers: [...],
-  functions: [...]
+  steps: [...]  // Define AI agent workflow steps
 });
 
 // Initialize and export
@@ -30,144 +29,140 @@ export default {
 };
 ```
 
-2. TRIGGER TYPES
-You must implement one or more of these trigger types:
+2. TASK COMPONENTS
 
-a) Webhook Triggers:
+a) Task Metadata:
 ```typescript
 {
-  name: "your-webhook",
-  type: "webhook",
-  parameters?: z.ZodType,  // Optional
-  execute: (c: Context) => Promise<void> | void
+  name: string;         // Unique identifier for the task
+  description: string;  // What the task does
+  version: string;      // Semantic version
 }
 ```
-- Use the Hono Context (c) to handle request/response
-- Set responses using c.json() and c.status()
-- Parameters are optional for webhooks
 
-b) Cron Triggers:
+b) Triggers:
+You must implement one or more trigger types:
+
+Manual Trigger:
 ```typescript
 {
-  name: "your-cron",
-  type: "cron",
-  cron: "* * * * *",  // Standard cron syntax
-  execute: () => Promise<void> | void
-}
-```
-- No parameters allowed
-- Must use trigger() to call functions
-- Cron times are in UTC
-
-c) Manual Triggers:
-```typescript
-{
-  name: "your-manual",
   type: "manual",
-  parameters: z.ZodType<TParams>,
-  execute: (params: TParams) => Promise<void> | void
+  schema: z.ZodType    // Validates input data
 }
 ```
-- Must define parameters schema
-- Parameters are passed directly to execute
 
-3. FUNCTIONS
-Functions are reusable operations that triggers can call:
+Scheduled Trigger:
 ```typescript
 {
-  name: "your-function",
-  parameters: z.ZodType<TParams>,
-  execute: (params: TParams) => Promise<void> | void
+  type: "scheduled",
+  cron: "* * * * *"    // Standard cron syntax (UTC)
 }
+```
+
+c) Steps:
+Each step in the AI agent workflow:
+```typescript
+{
+  prompt: string;       // Instructions for the AI
+  maxSteps: number;     // Maximum iterations allowed
+  tools: string[];      // Available tools for this step
+}
+```
+
+3. TOOLS
+Tools are specified at the step level:
+```typescript
+tools: [
+  "WEB_SEARCH",        // Search the web for information
+  "EXECUTE_CODE",      // Run code snippets
+  "READ_FILE",         // Read file contents
+  // ... other available tools
+]
 ```
 
 4. PARAMETER VALIDATION
 Always use Zod for parameter validation:
-- Define schemas at the top level
+- Define schemas for manual triggers
 - Use z.object() for structured data
 - Add .describe() for documentation
 - Use type inference with z.infer<>
 
-5. TRIGGER FUNCTION
-Use trigger() to call functions from triggers:
-```typescript
-await trigger(
-  "functionName",
-  parameters,
-  { delay?: number | string }  // Optional
-);
+5. VALIDATION COMMAND
+Use the built-in validation command to verify your tasks:
+```bash
+npx automate-new-sdk validate
 ```
+This will:
+- Validate task structure
+- Check trigger configurations
+- Verify step definitions
+- Ensure tool specifications are correct
 
-6. RESPONSE HANDLING
-- Webhook triggers: Use c.json() and c.status()
-- Other triggers: Don't return values, use trigger()
-- Functions: Don't return values, perform actions
+6. ENDPOINTS CREATED
+Your automation will create these endpoints:
+- GET /                     -> Health check
+- POST /trigger/{index}     -> Trigger endpoints (manual/scheduled)
 
 7. BEST PRACTICES
-- Use descriptive names for triggers and functions
+- Use descriptive names for tasks and steps
 - Add proper descriptions
-- Validate all inputs with Zod
-- Handle errors in execute functions
+- Validate all manual trigger inputs with Zod
+- Keep steps focused and atomic
+- Specify only necessary tools per step
 - Use proper TypeScript types
-- Keep functions focused and reusable
-- Use trigger() for function calls
-- Don't mix response handling styles
+- Test with the validation command before deploying
 
-8. ENDPOINTS CREATED
-Your automation will create these endpoints:
-- GET /                           -> Health check
-- POST /webhook/{name}           -> Webhook triggers
-- POST /manual-trigger/{name}    -> Manual triggers
-- POST /cronjob-trigger/{name}   -> Cron triggers
-- POST /{functionName}           -> Direct function calls
+8. EXAMPLE TASK
 
-9. EXAMPLE PATTERNS
-
-a) Webhook calling function:
 ```typescript
-{
-  type: "webhook",
-  execute: async (c: Context) => {
-    const body = await c.req.json();
-    const params = YourSchema.parse(body);
-    await trigger("yourFunction", params);
-    await c.json({ success: true });
-  }
-}
+import { task, automate } from 'automate-new-sdk';
+import { z } from 'zod';
+
+const InputSchema = z.object({
+  query: z.string().min(1).describe('Search query')
+});
+
+const searchTask = task({
+  name: "web-search-task",
+  description: "Searches the web and summarizes results",
+  version: "1.0.0",
+  triggers: [
+    {
+      type: "manual",
+      schema: InputSchema
+    },
+    {
+      type: "scheduled",
+      cron: "0 9 * * *"  // Daily at 9 AM UTC
+    }
+  ],
+  steps: [
+    {
+      prompt: "Search the web for the provided query and summarize the results",
+      maxSteps: 3,
+      tools: ["WEB_SEARCH"]
+    },
+    {
+      prompt: "Format the summary in markdown",
+      maxSteps: 1,
+      tools: []
+    }
+  ]
+});
+
+const app = automate.serve(searchTask);
+export default {
+  fetch: app.fetch.bind(app)
+};
 ```
 
-b) Cron trigger with scheduling:
-```typescript
-{
-  type: "cron",
-  cron: "0 9 * * *",  // 9 AM UTC
-  execute: async () => {
-    await trigger("yourFunction", { param: "value" });
-  }
-}
-```
-
-c) Manual trigger with validation:
-```typescript
-{
-  type: "manual",
-  parameters: z.object({
-    field: z.string().email()
-  }),
-  execute: async (params) => {
-    await trigger("yourFunction", params);
-  }
-}
-```
-
-10. COMMON MISTAKES TO AVOID
-- Don't return values from execute functions
-- Don't skip parameter validation
-- Don't use response in trigger/function types
-- Don't mix async/sync code without proper handling
-- Don't forget to export the fetch handler
-- Don't call functions directly, use trigger()
-- Don't use parameters in cron triggers
+9. COMMON MISTAKES TO AVOID
+- Don't specify tools at the task level (use step level)
+- Don't skip the validation command
 - Don't forget to bind the fetch handler
+- Don't mix trigger types incorrectly
+- Don't omit maxSteps in step definitions
+- Don't use unavailable tools
+- Don't forget to validate manual trigger inputs
 
 Remember: The framework is designed for Cloudflare Workers, so all code should be compatible with that environment. 
